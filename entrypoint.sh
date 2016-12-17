@@ -9,4 +9,9 @@ fi
 # Allow groups to change files.
 umask 002
 
-exec "$@"
+if [ "$@" == "run" ]
+then
+  exec /usr/bin/supervisord -n -c /etc/supervisord.conf
+else
+  exec "$@"
+fi

@@ -1,0 +1,9 @@
+version: '2'
+services:
+  qbittorrent:
+    build: .
+    image: qbittorrent
+    user: "520"
+    ports:
+      - "8080:8080"
+      - "6881:6881"

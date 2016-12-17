@@ -5,6 +5,7 @@ RUN apk add --no-cache \
       boost-system \
       boost-thread \
       ca-certificates \
+      supervisor \
       qt5-qtbase
 
 COPY main.patch /
@@ -58,7 +59,10 @@ RUN set -x \
  && mkdir -p /home/qbittorrent/.config/qBittorrent \
  && mkdir -p /home/qbittorrent/.local/share/data/qBittorrent \
  && mkdir /downloads \
- && chmod go+rw -R /home/qbittorrent /downloads \
+ && mkdir /etc/supervisor.d \
+ && chmod go+rw -R /home/qbittorrent /downloads /run \
+ && chmod og+rwx -R /var/log \
+ && chmod og+r /etc/supervisord.conf \
  && ln -s /home/qbittorrent/.config/qBittorrent /config \
  && ln -s /home/qbittorrent/.local/share/data/qBittorrent /torrents \
     \
@@ -68,6 +72,7 @@ RUN set -x \
 # Default configuration file.
 COPY qBittorrent.conf /default/qBittorrent.conf
 COPY entrypoint.sh /
+COPY qbittorrent-supervisor.ini /etc/supervisor.d/qbittorrent.ini
 
 VOLUME ["/config", "/torrents", "/downloads"]
 
@@ -78,4 +83,4 @@ USER qbittorrent
 EXPOSE 8080 6881
 
 ENTRYPOINT ["dumb-init", "/entrypoint.sh"]
-CMD ["qbittorrent-nox"]
+CMD ["run"]
