@@ -1,4 +1,4 @@
-FROM alpine:3.4
+FROM alpine:3.5
 
 # Install required packages
 RUN apk add --no-cache \
@@ -6,7 +6,12 @@ RUN apk add --no-cache \
       boost-thread \
       ca-certificates \
       supervisor \
-      qt5-qtbase
+      qt5-qtbase \
+      jq \
+      curl \
+      wget \
+      bash \
+      unrar 
 
 COPY main.patch /
 
@@ -19,10 +24,10 @@ RUN set -x \
       g++ \
       make \
       qt5-qttools-dev \
-    \
+      git \
     # Install dumb-init
     # https://github.com/Yelp/dumb-init
- && curl -Lo /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.1.3/dumb-init_1.1.3_amd64 \
+ && curl -Lo /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64 \
  && chmod +x /usr/local/bin/dumb-init \
     \
     # Build lib rasterbar from source code (required by qBittorrent)
@@ -35,8 +40,7 @@ RUN set -x \
  && make install \
     \
     # Build qBittorrent from source code
- && QBITTORRENT_URL=$(curl -L http://www.qbittorrent.org/download.php | grep -Eo 'https?://[^"]*qbittorrent[^"]*\.tar\.xz[^"]*' | head -n1) \
- && curl -L $QBITTORRENT_URL | tar xJC /tmp \
+ && git clone https://github.com/qbittorrent/qBittorrent.git /tmp/qbittorrent \
  && cd /tmp/qbittorrent* \
  && ln -s /usr/bin/lrelease /usr/bin/lrelease-qt4 \
  && PKG_CONFIG_PATH=/usr/local/lib/pkgconfig ./configure --disable-gui \
@@ -59,8 +63,11 @@ RUN set -x \
  && mkdir -p /home/qbittorrent/.config/qBittorrent \
  && mkdir -p /home/qbittorrent/.local/share/data/qBittorrent \
  && mkdir /downloads \
- && mkdir /etc/supervisor.d \
- && chmod go+rw -R /home/qbittorrent /downloads /run \
+ && mkdir -p /media/USBDisk \
+ && mkdir -p /media/Hello \
+ && mkdir -p /media/Media \
+ && mkdir /etc/supervisor.d \	 
+ && chmod go+rw -R /home/qbittorrent /downloads /run /media/USBDisk /media/Media /media/Hello \
  && chmod og+rwx -R /var/log \
  && chmod og+r /etc/supervisord.conf \
  && ln -s /home/qbittorrent/.config/qBittorrent /config \
@@ -74,7 +81,7 @@ COPY qBittorrent.conf /default/qBittorrent.conf
 COPY entrypoint.sh /
 COPY qbittorrent-supervisor.ini /etc/supervisor.d/qbittorrent.ini
 
-VOLUME ["/config", "/torrents", "/downloads"]
+VOLUME ["/config", "/torrents", "/downloads", "/media/Media", "/media/USBDisk", "/media/Hello"]
 
 ENV HOME=/home/qbittorrent
 
