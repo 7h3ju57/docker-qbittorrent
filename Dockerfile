@@ -63,11 +63,8 @@ RUN set -x \
  && mkdir -p /home/qbittorrent/.config/qBittorrent \
  && mkdir -p /home/qbittorrent/.local/share/data/qBittorrent \
  && mkdir /downloads \
- && mkdir -p /media/USBDisk \
- && mkdir -p /media/Hello \
- && mkdir -p /media/Media \
  && mkdir /etc/supervisor.d \	 
- && chmod go+rw -R /home/qbittorrent /downloads /run /media/USBDisk /media/Media /media/Hello \
+ && chmod go+rw -R /home/qbittorrent /downloads /run \
  && chmod og+rwx -R /var/log \
  && chmod og+r /etc/supervisord.conf \
  && ln -s /home/qbittorrent/.config/qBittorrent /config \
@@ -81,7 +78,7 @@ COPY qBittorrent.conf /default/qBittorrent.conf
 COPY entrypoint.sh /
 COPY qbittorrent-supervisor.ini /etc/supervisor.d/qbittorrent.ini
 
-VOLUME ["/config", "/torrents", "/downloads", "/media/Media", "/media/USBDisk", "/media/Hello"]
+VOLUME ["/config", "/torrents", "/downloads"]
 
 ENV HOME=/home/qbittorrent
 
