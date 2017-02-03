@@ -5,10 +5,10 @@ services:
     image: qbittorrent
     user: "520"
     ports:
-      - "9000:8080" #Webui port
+      - "8080:8080" #Webui port
       - "6881:6881" #DHT
       - "53421:53421" #listen port, change this after first start
     volumes:
+      - ./volumes/downloads:/downloads
       - ./volumes/config:/config
       - ./volumes/torrents:/torrents
-      - /media/Media/torrents:/media/Media/torrents
