@@ -75,6 +75,7 @@ RUN set -x \
 
 # Default configuration file.
 COPY qBittorrent.conf /default/qBittorrent.conf
+COPY ./scripts/* /
 COPY entrypoint.sh /
 COPY qbittorrent-supervisor.ini /etc/supervisor.d/qbittorrent.ini
 
