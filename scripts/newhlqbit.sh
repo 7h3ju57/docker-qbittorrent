@@ -6,13 +6,36 @@ if [ $# -lt "3" ]; then
 	echo " Missing Arguments "
 	exit 1
 fi
+### HEADER ###
+
+LOCKFILE="/var/lock/`basename $0`"
+LOCKFD=99
+
+# PRIVATE
+_lock()             { flock -$1 $LOCKFD; }
+_no_more_locking()  { _lock u; _lock xn && rm -f $LOCKFILE; }
+_prepare_locking()  { eval "exec $LOCKFD>\"$LOCKFILE\""; trap _no_more_locking EXIT; }
+
+# ON START
+_prepare_locking
+
+# PUBLIC
+exlock_now()        { _lock xn; }  # obtain an exclusive lock immediately or fail
+exlock()            { _lock x; }   # obtain an exclusive lock
+shlock()            { _lock s; }   # obtain a shared lock
+unlock()            { _lock u; }   # drop a lock
+
+# lock file
+exlock
+
+
 
 QIPADDR="localhost"
 QPORT="8080"
-SRIP="192.168.1.152"
+SRIP=""
 SRPORT="9001"
 TSAVEPATH="$1" 										# /media/Media/torrent/Download/Sickrage/
-COMPLETEPATH="/media/Media/torrents/Complete"		# Path to Completed torrents
+COMPLETEPATH=""		# Path to Completed torrents
 TNAME="$2"											# "Big.MommaS01E02-fxp"
 THASH="$3"											# "sd9fd8fsd9f98df8ghd9f0"
 TSLOCATION="$(dirname $TSAVEPATH)"					# /media/Media/torrent/Download
@@ -20,9 +43,9 @@ FULLPATH="$TSAVEPATH""$TNAME"						# /media/Media/torrent/Download/Sickrage/"Big
 LABEL="$(basename $TSAVEPATH)"						# Sickrage
 
 #SickRage Only
-USERNAME="7h3ju57"									# SickRage username
-PASSWORD="Il0v3Kir\$tyn"								# Sickrage password
-PROCESS_DIR=""$COMPLETEPATH"/SickRage"				# directory to process
+USERNAME=""									# SickRage username
+PASSWORD=""								# Sickrage password
+PROCESS_DIR="/downloads"				# directory to process
 WGET_OPTIONS=""
 LOGIN_HTML_FILE="/dev/null"
 PROCESS_HTML_FILE="/dev/null"
@@ -68,10 +91,12 @@ fi
 echo " Copying and hardlinking where possible "
 chmod -R 777 "$FULLPATH"
 cp -Rl "$FULLPATH" "$COMPLETEPATH"/"$LABEL"
+chmod -R 777 "$COMPLETEPATH"/"$LABEL"/"$TNAME"
 
 if [ "$LABEL" == "SickRage" ]; then
 	echo " SickRage postprocessing commencing"
-	wget --quiet --save-cookies /tmp/sickrage_post_process_wget_cookies.txt -O $LOGIN_HTML_FILE --keep-session-cookies --post-data "username="$USERNAME"&password="$PASSWORD"" $WGET_OPTIONS http://$SRIP:$SRPORT/tv/login/
-	wget --quiet --load-cookies /tmp/sickrage_post_process_wget_cookies.txt -O $PROCESS_HTML_FILE --post-data "proc_dir=$PROCESS_DIR&process_method=move&delete_on=on" $WGET_OPTIONS http://$SRIP:$SRPORT/tv/home/postprocess/processEpisode
+	wget --quiet --save-cookies /tmp/sickrage_post_process_wget_cookies.txt -O $LOGIN_HTML_FILE --keep-session-cookies --post-data "username="$USERNAME"&password="$PASSWORD"" $WGET_OPTIONS http://$SRIP:$SRPORT/login/
+	wget --quiet --load-cookies /tmp/sickrage_post_process_wget_cookies.txt -O $PROCESS_HTML_FILE --post-data "proc_dir=$PROCESS_DIR&process_method=move&delete_on=on" $WGET_OPTIONS http://$SRIP:$SRPORT/home/postprocess/processEpisode
 	rm /tmp/sickrage_post_process_wget_cookies.txt
 fi
+unlock
